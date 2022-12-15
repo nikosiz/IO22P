@@ -6,7 +6,7 @@ def main(search_phrase):
     return product_offers
 
 
-products = main('lego minecraft wyspa zombie')
+products = main('monster high')
 for product in products:
     for info in product:
         print(info, end=' ')
