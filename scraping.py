@@ -1,5 +1,7 @@
 from selenium import webdriver
+from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
+import time
 
 from text_formatting import *
 
@@ -8,6 +10,9 @@ class PageType:
     MAIN = 0
     PRODUCT = 1
     NEXT = 2
+
+
+delivery_price_list = []
 
 
 def set_web_driver_options():
@@ -51,8 +56,11 @@ def get_product_price(shop_offer):
     return info
 
 
-def get_delivery_price(shop_offer):
-    return 'None'
+def get_delivery_price():
+    try:
+        return delivery_price_list[0]
+    finally:
+        delivery_price_list.pop(0)
 
 
 def extract_data_from_product_page(product_page):
@@ -64,7 +72,7 @@ def extract_data_from_product_page(product_page):
     for shop_offer in shop_offers:
         shop_name = get_shop_name(shop_offer)
         product_price = get_product_price(shop_offer)
-        delivery_price = get_delivery_price(shop_offer)
+        delivery_price = get_delivery_price()
         offer = [product_name, shop_name, product_price, delivery_price]
         data.append(offer)
 
@@ -98,6 +106,38 @@ def get_page_content(phrase, page_type, page_num=0):
 
     driver = webdriver.Chrome()
     driver.get(url)
+    if page_type is PageType.PRODUCT:
+        shops_list = driver.find_elements(By.CLASS_NAME, 'view-offer-details')
+        for shop in enumerate(shops_list):
+            try:
+                time.sleep(3)
+                driver.execute_script(
+                    "document.getElementsByClassName('view-offer-details')[" + str(shop[0]) + "].style"
+                                                                                              ".visibility"
+                                                                                              " = "
+                                                                                              "'visible';")
+                time.sleep(3)
+                if shop[0] == 0:
+                    driver.find_element(By.XPATH, '//*[@id="js_cookie-monster"]/div/div/p/button').click()
+                    time.sleep(3)
+                    driver.find_element(By.XPATH, '/html/body/div[1]/div[5]/button').click()
+                    time.sleep(3)
+                shop[1].click()
+                time.sleep(5)
+                # TODO remove time.sleep
+
+                info_div = driver.find_element(By.XPATH, '//*[@id="click"]/div[2]/section/ul/li[' + str(shop[0] + 1)
+                                               + ']/div/div[2]/div[2]/div[5]/div/ul/li/ul/li/b')
+                text = info_div.text
+                string = str(text).replace('\n', '').replace(' zł', '').replace(',', '.')
+                delivery_price = float(string)
+
+                delivery_price_list.append(delivery_price)
+            except:
+                # delivery_price = 0.0
+                # delivery_price_list.append(delivery_price)
+                # TODO Allegro Smart 0.0 price
+                pass
     soup = BeautifulSoup(driver.page_source, 'html.parser')
     return soup
 
