@@ -19,8 +19,9 @@ def set_web_driver_options():
     options = webdriver.ChromeOptions()
     options.add_argument('--ignore-certificate-errors')
     options.add_argument('--incognito')
-    options.add_argument('--headless')  # without opening browser window
+    options.add_argument('--headless=chrome')  # without opening browser window
     options.add_argument('no-sandbox')
+    return options
 
 
 def get_shop_offers_from_product_page(product_page):
@@ -63,6 +64,15 @@ def get_delivery_price():
         delivery_price_list.pop(0)
 
 
+def get_shop_url(shop_offer):
+    try:
+        info_div = shop_offer.find(class_='product-offer__product__offer-details__name')
+        info = info_div.find('a').get('href')
+    except:
+        info = 'None'
+    return info
+
+
 def extract_data_from_product_page(product_page):
     # TODO error handling
     data = []
@@ -73,7 +83,8 @@ def extract_data_from_product_page(product_page):
         shop_name = get_shop_name(shop_offer)
         product_price = get_product_price(shop_offer)
         delivery_price = get_delivery_price()
-        offer = [product_name, shop_name, product_price, delivery_price]
+        shop_url = get_shop_url(shop_offer)
+        offer = [product_name, shop_name, product_price, delivery_price, shop_url]
         data.append(offer)
 
     return data
@@ -104,7 +115,7 @@ def get_page_content(phrase, page_type, page_num=0):
     else:
         url = get_product_page_url(phrase)
 
-    driver = webdriver.Chrome()
+    driver = webdriver.Chrome(chrome_options=set_web_driver_options())
     driver.get(url)
     if page_type is PageType.PRODUCT:
         shops_list = driver.find_elements(By.CLASS_NAME, 'view-offer-details')
@@ -158,8 +169,6 @@ def product_has_ceneo_offers(product):
 
 def get_product_offers(search_phrase):
     product_offers = []
-
-    set_web_driver_options()
 
     main_ceneo_page = get_page_content(search_phrase, PageType.MAIN)
     num_of_pages = get_num_of_pages(main_ceneo_page) + 1
