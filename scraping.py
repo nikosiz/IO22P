@@ -107,7 +107,7 @@ def get_num_of_pages(main_ceneo_page):
     return num_of_pages
 
 
-def get_page_content(phrase, page_type, page_num=0):
+def get_page_content(phrase, page_type, sorting, page_num=0):
     if page_type is PageType.MAIN:
         url = get_main_ceneo_page_url(phrase)
     elif page_type is PageType.NEXT:
@@ -117,6 +117,18 @@ def get_page_content(phrase, page_type, page_num=0):
 
     driver = webdriver.Chrome(chrome_options=set_web_driver_options())
     driver.get(url)
+
+    if page_type is PageType.MAIN and sorting == 1:
+        driver.find_element(By.XPATH, '//*[@id="body"]/div/div/div[3]/div/section/div[1]/div[2]/div/a/b').click()
+        driver.find_element(By.XPATH, '//*[@id="body"]/div/div/div[3]/div/section/div[1]/div[2]/div/div/a[2]').click()
+
+    elif page_type is PageType.MAIN and sorting == 0:
+        # TODO sortowanie wg ilości sklepów
+        pass
+
+    else:
+        pass
+
     if page_type is PageType.PRODUCT:
         shops_list = driver.find_elements(By.CLASS_NAME, 'view-offer-details')
         for shop in enumerate(shops_list):
@@ -167,10 +179,10 @@ def product_has_ceneo_offers(product):
         return False
 
 
-def get_product_offers(search_phrase):
+def get_product_offers(search_phrase, sorting):
     product_offers = []
 
-    main_ceneo_page = get_page_content(search_phrase, PageType.MAIN)
+    main_ceneo_page = get_page_content(search_phrase, PageType.MAIN, sorting)
     num_of_pages = get_num_of_pages(main_ceneo_page) + 1
 
     products = extract_products_from_main_page(main_ceneo_page)
@@ -178,7 +190,7 @@ def get_product_offers(search_phrase):
     for product in products:
         if product_has_ceneo_offers(product):
             click_hash = get_product_click_hash(product)
-            product_page = get_page_content(click_hash, PageType.PRODUCT)
+            product_page = get_page_content(click_hash, PageType.PRODUCT, sorting)
             product_data = extract_data_from_product_page(product_page)
             product_offers += product_data
 
@@ -190,7 +202,7 @@ def get_product_offers(search_phrase):
         for product in next_products:
             if product_has_ceneo_offers(product):
                 click_hash = get_product_click_hash(product)
-                product_page = get_page_content(click_hash, PageType.PRODUCT)
+                product_page = get_page_content(click_hash, PageType.PRODUCT, 2)
                 product_data = extract_data_from_product_page(product_page)
                 product_offers += product_data
 
