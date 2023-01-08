@@ -2,6 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 import time
+import re
 
 from text_formatting import *
 
@@ -13,6 +14,7 @@ class PageType:
 
 
 delivery_price_list = []
+sorted_list = []
 
 
 def set_web_driver_options():
@@ -108,6 +110,7 @@ def get_num_of_pages(main_ceneo_page):
 
 
 def get_page_content(phrase, page_type, sorting, page_num=0):
+    global sorted_list
     if page_type is PageType.MAIN:
         url = get_main_ceneo_page_url(phrase)
     elif page_type is PageType.NEXT:
@@ -121,11 +124,55 @@ def get_page_content(phrase, page_type, sorting, page_num=0):
     if page_type is PageType.MAIN and sorting == 1:
         driver.find_element(By.XPATH, '//*[@id="body"]/div/div/div[3]/div/section/div[1]/div[2]/div/a/b').click()
         driver.find_element(By.XPATH, '//*[@id="body"]/div/div/div[3]/div/section/div[1]/div[2]/div/div/a[2]').click()
-
     elif page_type is PageType.MAIN and sorting == 0:
-        # TODO sortowanie wg ilości sklepów
-        pass
+        try:
+            num_of_pages = driver.find_element(By.ID, 'page-counter').get_attribute('data-pagecount')
+            num_of_pages = int(num_of_pages)
+            for page in range(num_of_pages):
+                sorting_list = driver.find_elements(By.CLASS_NAME, 'cat-prod-row')
+                for product in enumerate(sorting_list):
+                    try:
+                        info = driver.find_element(By.XPATH, '//*[@id="body"]/div/div/div[3]/div/section/div[2]/div['
+                                                   + str(product[0] + 1) + ']/div/div[2]/div[2]/a[2]/span')
+                        string = str(info.text)
 
+                        div = driver.find_element(By.XPATH, '//*[@id="body"]/div/div/div[3]/div/section/div[2]/div['
+                                                  + str(product[0] + 1) + ']/div/div[1]/a')
+                        href = div.get_property('href').replace('https://www.ceneo.pl', '')
+
+                        if string == '':
+                            list1 = [1, href]
+                        else:
+                            num = re.findall(r'\b\d+\b', string)[0]
+                            list1 = [int(num), href]
+                        sorted_list.append(list1)
+                        sorted_list = sorted(sorted_list, key=lambda x: x[0], reverse=True)
+                    except:
+                        pass
+                driver.find_element(By.XPATH, '//*[@id="body"]/div/div/div[3]/div/section/div[1]/div[3]/div[2]/a').click()
+            del sorted_list[10:len(sorted_list) - 1]
+        except:
+            sorting_list = driver.find_elements(By.CLASS_NAME, 'cat-prod-row')
+            for product in enumerate(sorting_list):
+                try:
+                    info = driver.find_element(By.XPATH, '//*[@id="body"]/div/div/div[3]/div/section/div[2]/div['
+                                               + str(product[0] + 1) + ']/div/div[2]/div[2]/a[2]/span')
+                    string = str(info.text)
+
+                    div = driver.find_element(By.XPATH, '//*[@id="body"]/div/div/div[3]/div/section/div[2]/div['
+                                              + str(product[0] + 1) + ']/div/div[1]/a')
+                    href = div.get_property('href').replace('https://www.ceneo.pl', '')
+
+                    if string == '':
+                        list1 = [1, href]
+                    else:
+                        num = re.findall(r'\b\d+\b', string)[0]
+                        list1 = [int(num), href]
+                    sorted_list.append(list1)
+                    sorted_list = sorted(sorted_list, key=lambda x: x[0], reverse=True)
+                except:
+                    pass
+            del sorted_list[9:len(sorted_list)-1]
     else:
         pass
 
@@ -143,8 +190,6 @@ def get_page_content(phrase, page_type, sorting, page_num=0):
                 if shop[0] == 0:
                     driver.find_element(By.XPATH, '//*[@id="js_cookie-monster"]/div/div/p/button').click()
                     time.sleep(3)
-                    driver.find_element(By.XPATH, '/html/body/div[1]/div[5]/button').click()
-                    time.sleep(3)
                 shop[1].click()
                 time.sleep(5)
                 # TODO remove time.sleep
@@ -157,10 +202,8 @@ def get_page_content(phrase, page_type, sorting, page_num=0):
 
                 delivery_price_list.append(delivery_price)
             except:
-                # delivery_price = 0.0
-                # delivery_price_list.append(delivery_price)
-                # TODO Allegro Smart 0.0 price
-                pass
+                delivery_price = 0.0
+                delivery_price_list.append(delivery_price)
     soup = BeautifulSoup(driver.page_source, 'html.parser')
     return soup
 
@@ -190,7 +233,11 @@ def get_product_offers(search_phrase, sorting):
     for product in products:
         if product_has_ceneo_offers(product):
             click_hash = get_product_click_hash(product)
-            product_page = get_page_content(click_hash, PageType.PRODUCT, sorting)
+            if sorting == 0:
+                product_page = get_page_content(sorted_list[0][1], PageType.PRODUCT, 2)
+                sorted_list.pop(0)
+            else:
+                product_page = get_page_content(click_hash, PageType.PRODUCT, 2)
             product_data = extract_data_from_product_page(product_page)
             product_offers += product_data
 
