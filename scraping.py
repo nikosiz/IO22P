@@ -135,6 +135,36 @@ def shop_sorting(driver):
             pass
 
 
+def delivery_price(driver):
+    shops_list = driver.find_elements(By.CLASS_NAME, 'view-offer-details')
+    for shop in enumerate(shops_list):
+        try:
+            time.sleep(3)
+            driver.execute_script(
+                "document.getElementsByClassName('view-offer-details')[" + str(shop[0]) + "].style"
+                                                                                          ".visibility"
+                                                                                          " = "
+                                                                                          "'visible';")
+            time.sleep(3)
+            if shop[0] == 0:
+                driver.find_element(By.XPATH, '//*[@id="js_cookie-monster"]/div/div/p/button').click()
+                time.sleep(3)
+            shop[1].click()
+            time.sleep(5)
+            # TODO remove time.sleep
+
+            info_div = driver.find_element(By.XPATH, '//*[@id="click"]/div[2]/section/ul/li[' + str(shop[0] + 1)
+                                           + ']/div/div[2]/div[2]/div[5]/div/ul/li/ul/li/b')
+            text = info_div.text
+            string = str(text).replace('\n', '').replace(' zł', '').replace(',', '.')
+            delivery_price = float(string)
+
+            delivery_price_list.append(delivery_price)
+        except:
+            delivery_price = 0.0
+            delivery_price_list.append(delivery_price)
+
+
 def get_page_content(phrase, page_type, sorting, page_num=0):
     global sorted_list
     if page_type is PageType.MAIN:
@@ -169,33 +199,7 @@ def get_page_content(phrase, page_type, sorting, page_num=0):
         pass
 
     if page_type is PageType.PRODUCT:
-        shops_list = driver.find_elements(By.CLASS_NAME, 'view-offer-details')
-        for shop in enumerate(shops_list):
-            try:
-                time.sleep(3)
-                driver.execute_script(
-                    "document.getElementsByClassName('view-offer-details')[" + str(shop[0]) + "].style"
-                                                                                              ".visibility"
-                                                                                              " = "
-                                                                                              "'visible';")
-                time.sleep(3)
-                if shop[0] == 0:
-                    driver.find_element(By.XPATH, '//*[@id="js_cookie-monster"]/div/div/p/button').click()
-                    time.sleep(3)
-                shop[1].click()
-                time.sleep(5)
-                # TODO remove time.sleep
-
-                info_div = driver.find_element(By.XPATH, '//*[@id="click"]/div[2]/section/ul/li[' + str(shop[0] + 1)
-                                               + ']/div/div[2]/div[2]/div[5]/div/ul/li/ul/li/b')
-                text = info_div.text
-                string = str(text).replace('\n', '').replace(' zł', '').replace(',', '.')
-                delivery_price = float(string)
-
-                delivery_price_list.append(delivery_price)
-            except:
-                delivery_price = 0.0
-                delivery_price_list.append(delivery_price)
+        delivery_price(driver)
     soup = BeautifulSoup(driver.page_source, 'html.parser')
     return soup
 
@@ -222,10 +226,12 @@ def get_product_offers(search_phrase, sorting):
 
     products = extract_products_from_main_page(main_ceneo_page)
 
+    # TODO 10 produktów po cenie i filtry
     for product in products:
         if product_has_ceneo_offers(product):
             click_hash = get_product_click_hash(product)
             if sorting == 0:
+                # tu jest błąd bo patrz linijka 116 XD
                 product_page = get_page_content(sorted_list[0][1], PageType.PRODUCT, 2)
                 sorted_list.pop(0)
             else:
