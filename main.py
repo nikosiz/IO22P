@@ -7,7 +7,7 @@ def main(search_phrase, sorting):
 
 
 # sortowanie wg ceny = 1, wg ilości sklepów = 0
-products = main('lego minecraft zo', 0)
+products = main('barbie syrenka', 0)
 for product in products:
     for info in product:
         print(info, end=' ')

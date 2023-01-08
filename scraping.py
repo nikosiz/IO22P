@@ -100,6 +100,7 @@ def extract_products_from_main_page(page):
     return page.find_all(class_='cat-prod-row__body')
 
 
+# chyba to nie będzie potrzebne jeśli sortowanie będzie działać dobrze
 def get_num_of_pages(main_ceneo_page):
     products_per_page = 30
     sidebar_nav = main_ceneo_page.find(class_='grid-cat__site js_sidebar')
@@ -107,6 +108,31 @@ def get_num_of_pages(main_ceneo_page):
     num_of_all_products = int(quantity)
     num_of_pages = num_of_all_products // products_per_page
     return num_of_pages
+
+
+def shop_sorting(driver):
+    global sorted_list
+    sorting_list = driver.find_elements(By.CLASS_NAME, 'cat-prod-row')
+    # nie wiem czemu pętla idzie tylko do przedostatniego elementu i nie uwzględnia ostatniego
+    for product in enumerate(sorting_list):
+        try:
+            info = driver.find_element(By.XPATH, '//*[@id="body"]/div/div/div[3]/div/section/div[2]/div['
+                                       + str(product[0] + 1) + ']/div/div[2]/div[2]/a[2]/span')
+            string = str(info.text)
+
+            div = driver.find_element(By.XPATH, '//*[@id="body"]/div/div/div[3]/div/section/div[2]/div['
+                                      + str(product[0] + 1) + ']/div/div[1]/a')
+            href = div.get_property('href').replace('https://www.ceneo.pl', '')
+
+            if string == '':
+                list1 = [1, href]
+            else:
+                num = re.findall(r'\b\d+\b', string)[0]
+                list1 = [int(num), href]
+            sorted_list.append(list1)
+            sorted_list = sorted(sorted_list, key=lambda x: x[0], reverse=True)
+        except:
+            pass
 
 
 def get_page_content(phrase, page_type, sorting, page_num=0):
@@ -121,58 +147,24 @@ def get_page_content(phrase, page_type, sorting, page_num=0):
     driver = webdriver.Chrome(chrome_options=set_web_driver_options())
     driver.get(url)
 
+    # sortowanie po cenie
     if page_type is PageType.MAIN and sorting == 1:
         driver.find_element(By.XPATH, '//*[@id="body"]/div/div/div[3]/div/section/div[1]/div[2]/div/a/b').click()
         driver.find_element(By.XPATH, '//*[@id="body"]/div/div/div[3]/div/section/div[1]/div[2]/div/div/a[2]').click()
     elif page_type is PageType.MAIN and sorting == 0:
+        # sortowanie po sklepach jeśli więcej niż 1 strona
         try:
             num_of_pages = driver.find_element(By.ID, 'page-counter').get_attribute('data-pagecount')
             num_of_pages = int(num_of_pages)
             for page in range(num_of_pages):
-                sorting_list = driver.find_elements(By.CLASS_NAME, 'cat-prod-row')
-                for product in enumerate(sorting_list):
-                    try:
-                        info = driver.find_element(By.XPATH, '//*[@id="body"]/div/div/div[3]/div/section/div[2]/div['
-                                                   + str(product[0] + 1) + ']/div/div[2]/div[2]/a[2]/span')
-                        string = str(info.text)
-
-                        div = driver.find_element(By.XPATH, '//*[@id="body"]/div/div/div[3]/div/section/div[2]/div['
-                                                  + str(product[0] + 1) + ']/div/div[1]/a')
-                        href = div.get_property('href').replace('https://www.ceneo.pl', '')
-
-                        if string == '':
-                            list1 = [1, href]
-                        else:
-                            num = re.findall(r'\b\d+\b', string)[0]
-                            list1 = [int(num), href]
-                        sorted_list.append(list1)
-                        sorted_list = sorted(sorted_list, key=lambda x: x[0], reverse=True)
-                    except:
-                        pass
-                driver.find_element(By.XPATH, '//*[@id="body"]/div/div/div[3]/div/section/div[1]/div[3]/div[2]/a').click()
-            del sorted_list[10:len(sorted_list) - 1]
+                shop_sorting(driver)
+                if page < num_of_pages - 1:
+                    driver.find_element(By.XPATH, '//*[@id="body"]/div/div/div[3]/div/section/div[1]/div[3]/div[2]/a').click()
+            del sorted_list[10:len(sorted_list)]
+        # sortowanie po sklepach jeśli tylko 1 strona
         except:
-            sorting_list = driver.find_elements(By.CLASS_NAME, 'cat-prod-row')
-            for product in enumerate(sorting_list):
-                try:
-                    info = driver.find_element(By.XPATH, '//*[@id="body"]/div/div/div[3]/div/section/div[2]/div['
-                                               + str(product[0] + 1) + ']/div/div[2]/div[2]/a[2]/span')
-                    string = str(info.text)
-
-                    div = driver.find_element(By.XPATH, '//*[@id="body"]/div/div/div[3]/div/section/div[2]/div['
-                                              + str(product[0] + 1) + ']/div/div[1]/a')
-                    href = div.get_property('href').replace('https://www.ceneo.pl', '')
-
-                    if string == '':
-                        list1 = [1, href]
-                    else:
-                        num = re.findall(r'\b\d+\b', string)[0]
-                        list1 = [int(num), href]
-                    sorted_list.append(list1)
-                    sorted_list = sorted(sorted_list, key=lambda x: x[0], reverse=True)
-                except:
-                    pass
-            del sorted_list[9:len(sorted_list)-1]
+            shop_sorting(driver)
+            del sorted_list[10:len(sorted_list)]
     else:
         pass
 
