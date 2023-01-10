@@ -7,10 +7,9 @@ def main(search_phrase, sorting):
 
 
 # sortowanie wg ceny = 1, wg ilości sklepów = 0
-request = ['tamagotchi niebieskie', 'lalka barbie magia', 'kotek psotek']
-products = main(request, 0)
+request = ['barbie wymarzony kamper', 'kotek psotek', 'drewniany konik']
+basket = main(request, 0)
 
-for product in products:
-    for info in product:
-        print(info, end=' ')
-    print()
+print('\nOstatecznie koszyk wyglada tak\n')
+for item in basket:
+    print(item)

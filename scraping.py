@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 import time
 
 from text_formatting import *
+from customized_sort import *
 
 
 class PageType:
@@ -19,7 +20,7 @@ def set_web_driver_options():
     options = webdriver.ChromeOptions()
     options.add_argument('--ignore-certificate-errors')
     options.add_argument('--incognito')
-    #options.add_argument('--headless=chrome')  # without opening browser window
+    options.add_argument('--headless=chrome')  # without opening browser window
     options.add_argument('no-sandbox')
     return options
 
@@ -75,7 +76,7 @@ def get_shop_url(shop_offer):
 
 def offer_has_every_information(offer):
     for information in offer:
-        if information == 'None':
+        if offer[information] == 'None':
             return False
     return True
 
@@ -89,9 +90,9 @@ def extract_data_from_product_page(product_page):
     for shop_offer in shop_offers:
         shop_name = get_shop_name(shop_offer)
         product_price = get_product_price(shop_offer)
-        delivery_price = get_delivery_price()
+        delivery_price = 0.0
         shop_url = get_shop_url(shop_offer)
-        offer = [product_name, shop_name, product_price, delivery_price, shop_url]
+        offer = {'Name': product_name, 'Shop': shop_name, 'Price': product_price, 'Delivery Price': delivery_price, 'url': shop_url}
         if offer_has_every_information(offer):
             data.append(offer)
 
@@ -156,9 +157,8 @@ def get_page_content(phrase, page_type, page_num=0):
     driver = webdriver.Chrome(chrome_options=set_web_driver_options())
     driver.get(url)
 
-    # TODO (optional)
-    if page_type is PageType.PRODUCT:
-        delivery_price(driver)
+    # if page_type is PageType.PRODUCT:
+    #     delivery_price(driver)
 
     soup = BeautifulSoup(driver.page_source, 'html.parser')
     return soup
@@ -215,5 +215,12 @@ def get_product_offers(search_phrase):
 def get_product(search_phrases, sorting):
     basket = []
     for search_phrase in search_phrases:
-        basket += get_product_offers(search_phrase)
-    return basket
+        products = get_product_offers(search_phrase)
+        basket.append(products)
+        for offer in products:
+            print(offer)
+
+    if sorting == 0:
+        return sort_by_price(basket)
+    if sorting == 1:
+        return sort_by_shop_num(basket)
