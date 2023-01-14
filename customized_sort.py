@@ -18,13 +18,13 @@ def sort_shops(shop_list):
 
 def get_product_offer_from_shop_name(shop, item):
     for item_offer in item:
-        if item_offer['products': 'offer': 'seller'] == shop:
+        if item_offer['resultProduct']['offer']['seller'] == shop:
             return item_offer
 
 
 def item_is_in_shop(shop, item):
     for item_offer in item:
-        if item_offer['products': 'offer': 'seller'] == shop:
+        if item_offer['resultProduct']['offer']['seller'] == shop:
             return True
     return False
 
@@ -35,8 +35,8 @@ def remove_duplicate_shops(basket):
     for item in basket:
         item_without_duplicates = []
         for item_offer in item:
-            if item_offer['products': 'offer': 'seller'] not in shops_list:
-                shops_list.append([item_offer['products': 'offer': 'seller'], 0])
+            if item_offer['resultProduct']['offer']['seller'] not in shops_list:
+                shops_list.append([item_offer['resultProduct']['offer']['seller'], 0])
                 item_without_duplicates.append(item_offer)
         basket_without_duplicates.append(item_without_duplicates)
 

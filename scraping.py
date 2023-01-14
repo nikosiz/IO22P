@@ -1,7 +1,6 @@
 from selenium import webdriver
-from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
-import time
+import re
 
 from text_formatting import *
 from customized_sort import *
@@ -11,9 +10,6 @@ class PageType:
     MAIN = 0
     PRODUCT = 1
     NEXT = 2
-
-
-delivery_price_list = []
 
 
 def set_web_driver_options():
@@ -60,11 +56,25 @@ def get_product_price(shop_offer):
     return info
 
 
-def get_delivery_price():
+def get_delivery_price(shop_offer, product_price):
     try:
-        return delivery_price_list[0]
-    finally:
-        delivery_price_list.pop(0)
+        delivery_price_info = shop_offer.find(class_='product-delivery-info js_deliveryInfo')
+        delivery_price_text = delivery_price_info.text
+        if delivery_price_text == '\nDarmowa wysyłka\n':
+            return 0.0
+        elif delivery_price_text == '\nszczegóły dostawy\n':
+            return 0.0
+        else:
+            delivery_price_text = str(delivery_price_text).replace(',', '.')
+            summary_price = re.findall(r"[-+]?(?:\d*\.*\d+)", delivery_price_text)[0]
+            delivery_price = float(summary_price) - float(product_price)
+            try:
+                delivery_price = round(delivery_price, 2)
+            except:
+                pass
+            return delivery_price
+    except:
+        return 'None'
 
 
 def get_shop_url(shop_offer):
@@ -111,7 +121,7 @@ def extract_data_from_product_page(product_page, search_phrase):
     for shop_offer in shop_offers:
         shop_name = get_shop_name(shop_offer)
         product_price = get_product_price(shop_offer)
-        delivery_price = 0.0
+        delivery_price = get_delivery_price(shop_offer, product_price)
         shop_url = get_shop_url(shop_offer)
         offer = {'searchProduct': search_phrase, "resultProduct": {"name": product_name, "thumbnailUrl": thumbnailUrl,
                                                                    "offer": {
@@ -142,36 +152,6 @@ def get_num_of_pages(main_ceneo_page):
     return num_of_pages
 
 
-def delivery_price(driver):
-    shops_list = driver.find_elements(By.CLASS_NAME, 'view-offer-details')
-    for shop in enumerate(shops_list):
-        try:
-            time.sleep(3)
-            driver.execute_script(
-                "document.getElementsByClassName('view-offer-details')[" + str(shop[0]) + "].style"
-                                                                                          ".visibility"
-                                                                                          " = "
-                                                                                          "'visible';")
-            time.sleep(3)
-            if shop[0] == 0:
-                driver.find_element(By.XPATH, '//*[@id="js_cookie-monster"]/div/div/p/button').click()
-                time.sleep(3)
-            shop[1].click()
-            time.sleep(5)
-            # TODO remove time.sleep
-
-            info_div = driver.find_element(By.XPATH, '//*[@id="click"]/div[2]/section/ul/li[' + str(shop[0] + 1)
-                                           + ']/div/div[2]/div[2]/div[5]/div/ul/li/ul/li/b')
-            text = info_div.text
-            string = str(text).replace('\n', '').replace(' zł', '').replace(',', '.')
-            delivery_price = float(string)
-
-            delivery_price_list.append(delivery_price)
-        except:
-            delivery_price = 'None'
-            delivery_price_list.append(delivery_price)
-
-
 def get_page_content(phrase, page_type, page_num=0):
     if page_type is PageType.MAIN:
         url = get_main_ceneo_page_url(phrase)
@@ -182,9 +162,6 @@ def get_page_content(phrase, page_type, page_num=0):
 
     driver = webdriver.Chrome(chrome_options=set_web_driver_options())
     driver.get(url)
-
-    # if page_type is PageType.PRODUCT:
-    #     delivery_price(driver)
 
     soup = BeautifulSoup(driver.page_source, 'html.parser')
     return soup
