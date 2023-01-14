@@ -20,7 +20,7 @@ def set_web_driver_options():
     options = webdriver.ChromeOptions()
     options.add_argument('--ignore-certificate-errors')
     options.add_argument('--incognito')
-    options.add_argument('--headless=chrome')  # without opening browser window
+    #options.add_argument('--headless=chrome')  # without opening browser window
     options.add_argument('no-sandbox')
     return options
 
@@ -85,14 +85,16 @@ def extract_data_from_product_page(product_page):
     # TODO error handling
     data = []
     product_name = get_product_name(product_page).replace('\n', '')
-
+    print(product_name)
     shop_offers = get_shop_offers_from_product_page(product_page)
+    print(shop_offers)
     for shop_offer in shop_offers:
         shop_name = get_shop_name(shop_offer)
         product_price = get_product_price(shop_offer)
         delivery_price = 0.0
         shop_url = get_shop_url(shop_offer)
         offer = {'Name': product_name, 'Shop': shop_name, 'Price': product_price, 'Delivery Price': delivery_price, 'url': shop_url}
+        print(offer)
         if offer_has_every_information(offer):
             data.append(offer)
 
@@ -186,6 +188,10 @@ def get_product_offers(search_phrase):
 
     products = extract_products_from_main_page(main_ceneo_page)
 
+    # if request does not return any product
+    if not products:
+        return product_offers
+
     for product in products:
         if product_has_ceneo_offers(product):
             click_hash = get_product_click_hash(product)
@@ -217,8 +223,6 @@ def get_product(search_phrases, sorting):
     for search_phrase in search_phrases:
         products = get_product_offers(search_phrase)
         basket.append(products)
-        for offer in products:
-            print(offer)
 
     if sorting == 0:
         return sort_by_price(basket)
