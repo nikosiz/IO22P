@@ -29,7 +29,7 @@ The last one specifies sorting.
 
 Assuming user request is:
 ```
-www.example.com/search?product1=lalka barbie&product2=hot wheels&sorting=0
+www.example.com/search?product=lalka barbie&product=hot wheels&sorting=0
 ```
 Function returns product offers using JSON. Ready result may look like this:
 
