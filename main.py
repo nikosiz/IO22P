@@ -1,5 +1,5 @@
 import json
-from flask import Flask, request, jsonify
+from flask import Flask, request
 from scraping import get_product
 
 
@@ -22,14 +22,11 @@ app = Flask(__name__)
 
 @app.route('/search')
 def search():
-    input_data = []
-    for product in range(len(request.args) - 1):
-        input_data.append(request.args.get('product' + str(product + 1)))
-
+    input_data = request.args.getlist('product')
     sorting = int(request.args.get('sorting'))
     basket = main(input_data, sorting)
     response = json.dumps(basket)
-    return jsonify(response)
+    return response
 
 
 if __name__ == '__main__':

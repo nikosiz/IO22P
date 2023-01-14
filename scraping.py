@@ -69,8 +69,19 @@ def get_delivery_price():
 
 def get_shop_url(shop_offer):
     try:
-        info_div = shop_offer.find(class_='product-offer__product__offer-details__name')
-        info = info_div.find('a').get('href')
+        info_div = shop_offer.find(class_='product-offer__container clickable-offer js_offer-container-click '
+                                          'js_product-offer')
+        info = info_div['data-click-url']
+        info = 'https://www.ceneo.pl' + info
+    except:
+        info = 'None'
+    return info
+
+
+def get_thumbnail_url(product_page):
+    try:
+        info_div = product_page.find(class_='js_gallery-media gallery-carousel__media')
+        info = info_div.get('src')
     except:
         info = 'None'
     return info
@@ -94,13 +105,14 @@ def extract_data_from_product_page(product_page, search_phrase):
     data = []
     product_name = get_product_name(product_page).replace('\n', '')
 
+    thumbnailUrl = get_thumbnail_url(product_page)
+
     shop_offers = get_shop_offers_from_product_page(product_page)
     for shop_offer in shop_offers:
         shop_name = get_shop_name(shop_offer)
         product_price = get_product_price(shop_offer)
         delivery_price = 0.0
         shop_url = get_shop_url(shop_offer)
-        thumbnailUrl = 'url'
         offer = {'searchProduct': search_phrase, "resultProduct": {"name": product_name, "thumbnailUrl": thumbnailUrl,
                                                                    "offer": {
                                                                                 "price": product_price,
