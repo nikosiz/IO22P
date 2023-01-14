@@ -1,3 +1,5 @@
+import json
+from flask import Flask, request, jsonify
 from scraping import get_product
 
 
@@ -6,10 +8,29 @@ def main(search_phrase, sorting):
     return product_offers
 
 
-# sortowanie wg ceny = 1, wg ilości sklepów = 0
-request = ['vfsdagag']
-basket = main(request, 1)
+# sortowanie wg ceny = 0, wg ilości sklepów = 1
+# request = ['barbie wymarzony kamper', 'kotek psotek', 'drewniany konik']
+# basket = main(request, 0)
+#
+# print('\nOstatecznie koszyk wyglada tak\n')
+# for item in basket:
+#     print(item)
 
-print('\nOstatecznie koszyk wyglada tak\n')
-for item in basket:
-    print(item)
+
+app = Flask(__name__)
+
+
+@app.route('/search')
+def search():
+    input_data = []
+    for product in range(len(request.args) - 1):
+        input_data.append(request.args.get('product' + str(product + 1)))
+
+    sorting = int(request.args.get('sorting'))
+    basket = main(input_data, sorting)
+    response = json.dumps(basket)
+    return jsonify(response)
+
+
+if __name__ == '__main__':
+    app.run()
