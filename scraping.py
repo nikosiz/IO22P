@@ -22,14 +22,12 @@ def get_product(search_phrases, sorting):
         return sort_by_shop_num(basket)
 
 
-# extracts data from every product (aka search phrase)
+# extracts data from every product (search phrase)
 # and returns 10 best fitting product offer
 def get_product_offers(search_phrase):
     product_offers = []
 
     main_ceneo_page = get_page_content(search_phrase, PageType.MAIN)
-    num_of_pages = get_num_of_pages(main_ceneo_page) + 1
-
     products = extract_products_from_main_page(main_ceneo_page)
 
     # checking if request does not return any product
@@ -38,30 +36,34 @@ def get_product_offers(search_phrase):
 
     # scraping information about products on first main Ceneo page
     for product in products:
-        if product_has_ceneo_offers(product):
-            click_hash = get_product_click_hash(product)
-            product_page = get_page_content(click_hash, PageType.PRODUCT)
-            product_data = extract_data_from_product_page(product_page, search_phrase)
-            product_offers += product_data
-            if len(product_offers) >= 10:
-                return product_offers
+        product_offers += scrap_product_offers(product, search_phrase)
+        if len(product_offers) >= 10:
+            return product_offers
 
-    # if number of offer is < 10
+    # if number of offers is < 10
     # and there is more than one Ceneo page, repeat
+    num_of_pages = get_num_of_pages(main_ceneo_page) + 1
     for i in range(1, num_of_pages, 1):
         next_ceneo_page = get_page_content(search_phrase, PageType.NEXT, i)
 
         next_products = extract_products_from_main_page(next_ceneo_page)
         for product in next_products:
-            if product_has_ceneo_offers(product):
-                click_hash = get_product_click_hash(product)
-                product_page = get_page_content(click_hash, PageType.PRODUCT)
-                product_data = extract_data_from_product_page(product_page, search_phrase)
-                product_offers += product_data
-                if len(product_offers) >= 10:
-                    return product_offers
-
+            product_offers += scrap_product_offers(product, search_phrase)
+            if len(product_offers) >= 10:
+                return product_offers
     return product_offers
+
+
+# if product has offers, function creates click  hash
+# and scraps offers from product (product_scraping module)
+def scrap_product_offers(product, search_phrase):
+    if product_has_ceneo_offers(product):
+        click_hash = get_product_click_hash(product)
+        product_page = get_page_content(click_hash, PageType.PRODUCT)
+        product_data = extract_data_from_product_page(product_page, search_phrase)
+        return product_data
+    else:
+        return []
 
 
 # depending on page type, returns soup object of page

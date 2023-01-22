@@ -1,7 +1,7 @@
 import re
 
 
-# main function in this module, called by get_product_offers() in scraping module
+# main function in this module, called by scrap_product_offers() in scraping module
 # given product page, extracts offers data and returns ready offers
 def extract_data_from_product_page(product_page, search_phrase):
     data = []
@@ -15,12 +15,11 @@ def extract_data_from_product_page(product_page, search_phrase):
         product_price = get_product_price(shop_offer)
         delivery_price = get_delivery_price(shop_offer, product_price)
         shop_url = get_shop_url(shop_offer)
-        offer = {'searchProduct': search_phrase, "resultProduct": {"name": product_name, "thumbnailUrl": thumbnail_url,
-                                                                   "offer": {
-                                                                                "price": product_price,
-                                                                                "shippingPrice": delivery_price,
-                                                                                "seller": shop_name,
-                                                                                "redirectUrl": shop_url}}}
+        offer = {'searchProduct': search_phrase,
+                 "resultProduct": {"name": product_name,
+                                   "thumbnailUrl": thumbnail_url,
+                                   "offer": {"price": product_price, "shippingPrice": delivery_price,
+                                             "seller": shop_name, "redirectUrl": shop_url}}}
         if offer_has_every_information(offer):
             data.append(offer)
 
