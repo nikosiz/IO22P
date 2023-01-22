@@ -22,6 +22,8 @@ def extract_data_from_product_page(product_page, search_phrase):
                                              "seller": shop_name, "redirectUrl": shop_url}}}
         if offer_has_every_information(offer):
             data.append(offer)
+        if len(data) >= 10:
+            return data
 
     return data
 
