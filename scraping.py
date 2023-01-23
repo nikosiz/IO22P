@@ -6,13 +6,15 @@ from driver_setting import set_web_driver_options
 from text_formatting import *
 from customized_sort import *
 from helper_classes import *
+from tqdm import tqdm
 
 
 # main function in this module, called by main() in main module
 # given product search phrase, returns ready basket
 def get_product(search_phrases, sorting):
     basket = []
-    for search_phrase in search_phrases:
+    #tqdm shows progress bar, TODO: time limit, frontend, options for user - show partial/give more time
+    for search_phrase in tqdm(search_phrases):
         products = get_product_offers(search_phrase)
         basket.append(products)
 
