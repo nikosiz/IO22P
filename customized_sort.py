@@ -17,7 +17,6 @@ def get_summary_price(element):
 # cart should contain items from the smallest possible number of shops
 def sort_by_shop_num(basket):
     output_basket = []
-
     # sorting by price before removing duplicate shops,
     # in order to choose the cheapest offer in the same shop
     for item in basket:
