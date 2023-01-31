@@ -13,7 +13,7 @@ from tqdm import tqdm
 # given product search phrase, returns ready basket
 def get_product(search_phrases, sorting):
     basket = []
-    #tqdm shows progress bar, TODO: time limit, frontend, options for user - show partial/give more time
+    #tqdm shows progress bar,
     for search_phrase in tqdm(search_phrases):
         products = get_product_offers(search_phrase)
         basket.append(products)
