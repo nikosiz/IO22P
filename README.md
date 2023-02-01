@@ -1,4 +1,4 @@
-# Cemeo
+# ToyStores
 
 ## Table of contents
 * [Introduction](#Introduction)
@@ -8,7 +8,7 @@
 
 
 ## Introduction
-This program is a part of Cemeo: Ceneo search project. Its main purpose is to scrap Ceneo page and provide IO22J part with ready product offers.  
+This program is a part of ToyStores: Ceneo search project. Its main purpose is to scrap Ceneo page and provide IO22J part with ready product offers.  
 
 ## Technologies
 * Python 3.2
